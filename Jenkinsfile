@@ -63,7 +63,7 @@ pipeline {
         stage('Register ECS Task Definition') {
             steps {
                 sh """
-                    bash scripts/register-task-def.sh \
+                    ./scripts/register-task-def.sh \
                     ${ECS_CLUSTER} \
                     ${TASK_FAMILY} \
                     ${FULL_IMAGE} \
