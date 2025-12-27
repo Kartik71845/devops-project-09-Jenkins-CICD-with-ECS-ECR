@@ -21,11 +21,10 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                sh 'ls -la'
             }
         }
 
-        stage('AWS Login') {
+        stage('Build & Deploy to AWS (ECR + ECS)') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'aws-ecr-creds',
@@ -33,54 +32,40 @@ pipeline {
                     passwordVariable: 'AWS_SECRET_ACCESS_KEY'
                 )]) {
                     sh '''
+                        set -e
+
                         export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
                         export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
                         export AWS_DEFAULT_REGION=${AWS_REGION}
 
+                        echo "== Verifying AWS credentials =="
+                        aws sts get-caller-identity
+
+                        echo "== Login to ECR =="
                         aws ecr get-login-password --region ${AWS_REGION} \
-                        | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                          | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
+                        echo "== Build Docker image =="
+                        docker build -t ${FULL_IMAGE} .
+
+                        echo "== Push image to ECR =="
+                        docker push ${FULL_IMAGE}
+
+                        echo "== Register ECS task definition =="
+                        ./scripts/register-task-def.sh \
+                          ${ECS_CLUSTER} \
+                          ${TASK_FAMILY} \
+                          ${FULL_IMAGE} \
+                          ${AWS_REGION}
+
+                        echo "== Update ECS service =="
+                        ./scripts/update-ecs-service.sh \
+                          ${ECS_CLUSTER} \
+                          ${ECS_SERVICE} \
+                          ${TASK_FAMILY} \
+                          ${AWS_REGION}
                     '''
                 }
-            }
-        }
-
-        stage('Build Image') {
-            steps {
-                sh """
-                    docker build -t ${FULL_IMAGE} .
-                """
-            }
-        }
-
-        stage('Push to ECR') {
-            steps {
-                sh """
-                    docker push ${FULL_IMAGE}
-                """
-            }
-        }
-
-        stage('Register ECS Task Definition') {
-            steps {
-                sh """
-                    ./scripts/register-task-def.sh \
-                    ${ECS_CLUSTER} \
-                    ${TASK_FAMILY} \
-                    ${FULL_IMAGE} \
-                    ${AWS_REGION}
-                """
-            }
-        }
-
-        stage('Deploy to ECS (Fargate)') {
-            steps {
-                sh """
-                    ./scripts/update-ecs-service.sh \
-                    ${ECS_CLUSTER} \
-                    ${ECS_SERVICE} \
-                    ${TASK_FAMILY} \
-                    ${AWS_REGION}
-                """
             }
         }
     }
