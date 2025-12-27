@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
-
-CLUSTER_NAME=$1
-TASK_FAMILY=$2
-IMAGE_URI=$3
-AWS_REGION=$4
+echo "DEBUG:"       
+echo "CLUSTER_NAME=$1"
+echo "TASK_FAMILY=$2"
+echo "IMAGE_URI=$3"
+echo "AWS_REGION=$4"
 
 echo "Registering new task definition..."
 

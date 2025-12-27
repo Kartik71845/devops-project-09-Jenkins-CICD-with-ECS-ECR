@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
-
-CLUSTER_NAME=$1
-SERVICE_NAME=$2
-TASK_FAMILY=$3
-AWS_REGION=$4
+echo "DEBUG:"
+echo "CLUSTER_NAME=$1"
+echo "SERVICE_NAME=$2"
+echo "TASK_FAMILY=$3"
+echo "AWS_REGION=$4"
 
 echo "Updating ECS service..."
 
