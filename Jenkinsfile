@@ -7,7 +7,7 @@ pipeline {
         ECR_REPO_NAME  = 'ecs-static-site'
 
         ECS_CLUSTER = 'jenkins-ecs-cluster'
-        ECS_SERVICE = 'jenkins-ecs-service'
+        ECS_SERVICE = 'jenkins-ecs-task-service'
         TASK_FAMILY = 'jenkins-ecs-task'
 
         ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
